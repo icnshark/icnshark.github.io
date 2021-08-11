@@ -20,16 +20,16 @@
     var CONFIG = {"hostname":"cnshark.top","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta name="description" content="之前解决了问题一，现在来尝试看待一下问题二，不去详细观察交互的数据包细节，把重点关注在Kerberos在设计上如何来抵抗中间人攻击以及用户伪造上。">
+  <meta name="description" content="从上帝视角来看待Kerberos，以及对Kerberos认证协议的攻击（白银票据，黄金票据）。之前解决了问题一，现在来尝试看待一下问题二，不去详细观察交互的数据包细节，把重点关注在Kerberos在设计上如何来抵抗中间人攻击以及用户伪造上。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="内网安全-Windows域渗透-Kerberos委派（三）">
 <meta property="og:url" content="https://cnshark.top/2021/08/11/%E5%86%85%E7%BD%91%E5%AE%89%E5%85%A8-Windows%E5%9F%9F%E6%B8%97%E9%80%8F-Kerberos%E5%A7%94%E6%B4%BE%EF%BC%88%E4%B8%89%EF%BC%89/index.html">
 <meta property="og:site_name" content="dayu&#39;s blog">
-<meta property="og:description" content="之前解决了问题一，现在来尝试看待一下问题二，不去详细观察交互的数据包细节，把重点关注在Kerberos在设计上如何来抵抗中间人攻击以及用户伪造上。">
+<meta property="og:description" content="从上帝视角来看待Kerberos，以及对Kerberos认证协议的攻击（白银票据，黄金票据）。之前解决了问题一，现在来尝试看待一下问题二，不去详细观察交互的数据包细节，把重点关注在Kerberos在设计上如何来抵抗中间人攻击以及用户伪造上。">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/202108102236434.png">
 <meta property="article:published_time" content="2021-08-11T04:57:55.000Z">
-<meta property="article:modified_time" content="2021-08-11T09:15:58.018Z">
+<meta property="article:modified_time" content="2021-08-11T09:32:05.712Z">
 <meta property="article:author" content="dayu">
 <meta property="article:tag" content="内网">
 <meta property="article:tag" content="Kerberos">
@@ -196,7 +196,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2021-08-11 12:57:55 / 修改时间：17:15:58" itemprop="dateCreated datePublished" datetime="2021-08-11T12:57:55+08:00">2021-08-11</time>
+              <time title="创建时间：2021-08-11 12:57:55 / 修改时间：17:32:05" itemprop="dateCreated datePublished" datetime="2021-08-11T12:57:55+08:00">2021-08-11</time>
             </span>
 
           
@@ -210,7 +210,7 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <p>之前解决了问题一，现在来尝试看待一下问题二，不去详细观察交互的数据包细节，把重点关注在Kerberos在设计上如何来抵抗中间人攻击以及用户伪造上。</p>
+        <h3 id="从上帝视角来看待Kerberos，以及对Kerberos认证协议的攻击（白银票据，黄金票据）。"><a href="#从上帝视角来看待Kerberos，以及对Kerberos认证协议的攻击（白银票据，黄金票据）。" class="headerlink" title="从上帝视角来看待Kerberos，以及对Kerberos认证协议的攻击（白银票据，黄金票据）。"></a>从上帝视角来看待Kerberos，以及对Kerberos认证协议的攻击（白银票据，黄金票据）。</h3><p>之前解决了问题一，现在来尝试看待一下问题二，不去详细观察交互的数据包细节，把重点关注在Kerberos在设计上如何来抵抗中间人攻击以及用户伪造上。</p>
 <span id="more"></span>
 
 <p><img src="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/202108102236434.png" alt="img"></p>
@@ -228,7 +228,7 @@
 <li><p>Sever发送时间戳（HTTP服务会话密钥加密）给用户</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">用户使用缓存的HTTP服务会话密钥解密时间戳</span><br></pre></td></tr></table></figure></li>
 </ol>
-<p>纵观全部交互流程，Client一共发起了3次请求（2次KDC（AS和TGS），1次Server）</p>
+<h3 id="纵观全部交互流程"><a href="#纵观全部交互流程" class="headerlink" title="纵观全部交互流程"></a>纵观全部交互流程</h3><p>Client一共发起了3次请求（2次KDC（AS和TGS），1次Server）</p>
 <p>其中可以伪造TGT和Ticket。伪造TGT需要krbtgt的hash，伪造Ticket需要Server的hash。在AS不与TGS直接交互TGS会话密钥的情况下就构成了黄金票据，在Server不与KDC交互HTTP服务会话密钥的情况下就构成了白银票据的伪造。</p>
 <p>防范方法即AS与TGS交互TGS会话密钥，多重验证，避免篡改。白银票据同理。</p>
 <p>发现了一个有趣的地方，除了KDC之外，Client和Server都没有直接 交互hash。所以在理想情况下Kerberos完美的完成了身份认证。</p>
@@ -315,6 +315,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%8E%E4%B8%8A%E5%B8%9D%E8%A7%86%E8%A7%92%E6%9D%A5%E7%9C%8B%E5%BE%85Kerberos%EF%BC%8C%E4%BB%A5%E5%8F%8A%E5%AF%B9Kerberos%E8%AE%A4%E8%AF%81%E5%8D%8F%E8%AE%AE%E7%9A%84%E6%94%BB%E5%87%BB%EF%BC%88%E7%99%BD%E9%93%B6%E7%A5%A8%E6%8D%AE%EF%BC%8C%E9%BB%84%E9%87%91%E7%A5%A8%E6%8D%AE%EF%BC%89%E3%80%82"><span class="nav-number">1.</span> <span class="nav-text">从上帝视角来看待Kerberos，以及对Kerberos认证协议的攻击（白银票据，黄金票据）。</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BA%B5%E8%A7%82%E5%85%A8%E9%83%A8%E4%BA%A4%E4%BA%92%E6%B5%81%E7%A8%8B"><span class="nav-number">2.</span> <span class="nav-text">纵观全部交互流程</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
