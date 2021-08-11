@@ -20,20 +20,23 @@
     var CONFIG = {"hostname":"cnshark.top","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta property="og:type" content="article">
-<meta property="og:title" content="你從柔和明媚的艷陽天走過來">
-<meta property="og:url" content="https://cnshark.top/2021/08/06/%E4%BD%A0%E5%BE%9E%E6%9F%94%E5%92%8C%E6%98%8E%E5%AA%9A%E7%9A%84%E8%89%B7%E9%99%BD%E5%A4%A9%E8%B5%B0%E9%81%8E%E4%BE%86/index.html">
+  <meta name="description" content="之前解决了问题一，现在来尝试看待一下问题二，不去详细观察交互的数据包细节，把重点关注在Kerberos在设计上如何来抵抗中间人攻击以及用户伪造上。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="内网安全-Windows域渗透-Kerberos委派（三）">
+<meta property="og:url" content="https://cnshark.top/2021/08/11/%E5%86%85%E7%BD%91%E5%AE%89%E5%85%A8-Windows%E5%9F%9F%E6%B8%97%E9%80%8F-Kerberos%E5%A7%94%E6%B4%BE%EF%BC%88%E4%B8%89%EF%BC%89/index.html">
 <meta property="og:site_name" content="dayu&#39;s blog">
+<meta property="og:description" content="之前解决了问题一，现在来尝试看待一下问题二，不去详细观察交互的数据包细节，把重点关注在Kerberos在设计上如何来抵抗中间人攻击以及用户伪造上。">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/202108061340670.jpg">
-<meta property="article:published_time" content="2021-08-06T05:46:50.000Z">
-<meta property="article:modified_time" content="2021-08-06T09:21:18.773Z">
+<meta property="og:image" content="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/202108102236434.png">
+<meta property="article:published_time" content="2021-08-11T04:57:55.000Z">
+<meta property="article:modified_time" content="2021-08-11T09:15:58.018Z">
 <meta property="article:author" content="dayu">
-<meta property="article:tag" content="life">
+<meta property="article:tag" content="内网">
+<meta property="article:tag" content="Kerberos">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/202108061340670.jpg">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/202108102236434.png">
 
-<link rel="canonical" href="https://cnshark.top/2021/08/06/%E4%BD%A0%E5%BE%9E%E6%9F%94%E5%92%8C%E6%98%8E%E5%AA%9A%E7%9A%84%E8%89%B7%E9%99%BD%E5%A4%A9%E8%B5%B0%E9%81%8E%E4%BE%86/">
+<link rel="canonical" href="https://cnshark.top/2021/08/11/%E5%86%85%E7%BD%91%E5%AE%89%E5%85%A8-Windows%E5%9F%9F%E6%B8%97%E9%80%8F-Kerberos%E5%A7%94%E6%B4%BE%EF%BC%88%E4%B8%89%EF%BC%89/">
 
 
 <script id="page-configurations">
@@ -46,7 +49,7 @@
   };
 </script>
 
-  <title>你從柔和明媚的艷陽天走過來 | dayu's blog</title>
+  <title>内网安全-Windows域渗透-Kerberos委派（三） | dayu's blog</title>
   
 
 
@@ -169,7 +172,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://cnshark.top/2021/08/06/%E4%BD%A0%E5%BE%9E%E6%9F%94%E5%92%8C%E6%98%8E%E5%AA%9A%E7%9A%84%E8%89%B7%E9%99%BD%E5%A4%A9%E8%B5%B0%E9%81%8E%E4%BE%86/">
+    <link itemprop="mainEntityOfPage" href="https://cnshark.top/2021/08/11/%E5%86%85%E7%BD%91%E5%AE%89%E5%85%A8-Windows%E5%9F%9F%E6%B8%97%E9%80%8F-Kerberos%E5%A7%94%E6%B4%BE%EF%BC%88%E4%B8%89%EF%BC%89/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/avatar.jpg">
@@ -182,7 +185,7 @@
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          你從柔和明媚的艷陽天走過來
+          内网安全-Windows域渗透-Kerberos委派（三）
         </h1>
 
         <div class="post-meta">
@@ -193,7 +196,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2021-08-06 13:46:50 / 修改时间：17:21:18" itemprop="dateCreated datePublished" datetime="2021-08-06T13:46:50+08:00">2021-08-06</time>
+              <time title="创建时间：2021-08-11 12:57:55 / 修改时间：17:15:58" itemprop="dateCreated datePublished" datetime="2021-08-11T12:57:55+08:00">2021-08-11</time>
             </span>
 
           
@@ -207,11 +210,30 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <p><img src="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/202108061340670.jpg"></p>
+        <p>之前解决了问题一，现在来尝试看待一下问题二，不去详细观察交互的数据包细节，把重点关注在Kerberos在设计上如何来抵抗中间人攻击以及用户伪造上。</p>
 <span id="more"></span>
 
-<iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width=330 height=86 src="//music.163.com/outchain/player?type=2&id=39637642&auto=1&height=66"></iframe>
-
+<p><img src="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/202108102236434.png" alt="img"></p>
+<ol>
+<li><p>Client向AS发送请求（明文）</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">用户名不可伪造，Kerberos DB会直接查询。</span><br></pre></td></tr></table></figure></li>
+<li><p>AS通过Kerberos DB完成用户名校验之后返回TGT（通过krbtgt的hash加密，里面包含了TGS会话密钥）和一个Session Key（通过Client用户名的hash加密，里面包含TGS会话密钥）。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">假设用户输入的密码hash正确，则解密成功，获取到TGS会话密钥。</span><br><span class="line">-现在客户端目前有客户端无法解密的TGT以及解密Session Key得到的TGS会话密钥。</span><br><span class="line"></span><br><span class="line">如果用户输入的密码hash不正确，这里是无法获取到TGS会话密钥的，即无法进行下一步操作。</span><br><span class="line">-现在客户端有无法解密的TGT以及无法解密的Session Key</span><br><span class="line"></span><br><span class="line">那么是不是可以进行伪造呢？接下来再看。</span><br><span class="line">-如果需要伪造TGT则需要krbtgt的hash</span><br><span class="line">-伪造时间戳需要的TGS会话密钥必须和TGT里面的一样</span><br></pre></td></tr></table></figure></li>
+<li><p>用户发送TGT（krbtgt的hash加密）和时间戳（使用TGS会话密钥加密）以及需要请求的http服务的信息（明文）给TGS</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">TGS先检测http服务是否存在</span><br><span class="line">1.使用krbtgt的hash解密TGT，得到了TGS会话密钥</span><br><span class="line">2.使用TGS会话密钥解密时间戳，得到了时间</span><br><span class="line"></span><br><span class="line">如果解密出来的TGS会话密钥不能解密时间戳，那么可以确定用户hash被伪造</span><br><span class="line"></span><br><span class="line">TGS属于KDC拥有krbtgt的hash</span><br><span class="line"></span><br><span class="line">为什么TGS不直接与AS共享TGS会话密钥反而要去解密TGT获取TGS会话密钥？</span><br><span class="line">双向认证。</span><br></pre></td></tr></table></figure></li>
+<li><p>TGS发送给用户HTTP Service Ticket（使用Server的hash加密，里面包含HTTP 服务会话密钥），和HTTP 服务会话密钥（使用TGS会话密钥加密）</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">用户现在拥有HTTP Service Ticket和HTTP服务会话密钥</span><br><span class="line"></span><br><span class="line">HTTP Service Ticket 通过 Server hash加密</span><br><span class="line">HTTP服务会话密钥通过TGS会话密钥加密</span><br><span class="line"></span><br><span class="line">那么用户能不能伪造HTTP Service Ticket和HTTP服务会话密钥呢？</span><br><span class="line">-伪造HTTP Service Ticket需要Server hash加密</span><br><span class="line">-伪造时间戳使用HTTP服务会话密钥加密（伪造的HTTP服务会话密钥需要和HTTP Service Ticket里面的一样）</span><br></pre></td></tr></table></figure></li>
+<li><p>用户发送HTTP Service Ticket和时间戳（HTTP服务会话密钥加密）给Server</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Server 使用 server hash解密HTTP Service Ticket获得HTTP服务会话密钥加密</span><br><span class="line">再使用HTTP服务会话密钥加密解密时间戳</span><br></pre></td></tr></table></figure></li>
+<li><p>Sever发送时间戳（HTTP服务会话密钥加密）给用户</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">用户使用缓存的HTTP服务会话密钥解密时间戳</span><br></pre></td></tr></table></figure></li>
+</ol>
+<p>纵观全部交互流程，Client一共发起了3次请求（2次KDC（AS和TGS），1次Server）</p>
+<p>其中可以伪造TGT和Ticket。伪造TGT需要krbtgt的hash，伪造Ticket需要Server的hash。在AS不与TGS直接交互TGS会话密钥的情况下就构成了黄金票据，在Server不与KDC交互HTTP服务会话密钥的情况下就构成了白银票据的伪造。</p>
+<p>防范方法即AS与TGS交互TGS会话密钥，多重验证，避免篡改。白银票据同理。</p>
+<p>发现了一个有趣的地方，除了KDC之外，Client和Server都没有直接 交互hash。所以在理想情况下Kerberos完美的完成了身份认证。</p>
+<p>即白银票据和黄金票据主要用于维权，而不能直接横向或者纵向移动，因为不可能直接获取到hash。</p>
+<p>第3章到此为止，如果有误，感谢指出。</p>
 
     </div>
 
@@ -221,7 +243,8 @@
 
       <footer class="post-footer">
           <div class="post-tags">
-              <a href="/tags/life/" rel="tag"># life</a>
+              <a href="/tags/%E5%86%85%E7%BD%91/" rel="tag"># 内网</a>
+              <a href="/tags/Kerberos/" rel="tag"># Kerberos</a>
           </div>
 
         
@@ -229,11 +252,11 @@
 
         
     <div class="post-nav">
-      <div class="post-nav-item"></div>
       <div class="post-nav-item">
-    <a href="/2021/08/06/%E6%9C%94%E6%BA%90%E5%8F%8D%E5%88%B6%EF%BC%88%E4%B8%80%EF%BC%89/" rel="next" title="朔源反制（一）">
-      朔源反制（一） <i class="fa fa-chevron-right"></i>
+    <a href="/2021/08/11/%E5%86%85%E7%BD%91%E5%AE%89%E5%85%A8-Windows%E5%9F%9F%E6%B8%97%E9%80%8F-Kerberos%E5%A7%94%E6%B4%BE%EF%BC%88%E4%BA%8C%EF%BC%89/" rel="prev" title="内网安全-Windows域渗透-Kerberos委派（二）">
+      <i class="fa fa-chevron-left"></i> 内网安全-Windows域渗透-Kerberos委派（二）
     </a></div>
+      <div class="post-nav-item"></div>
     </div>
       </footer>
     
