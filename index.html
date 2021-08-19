@@ -165,6 +165,82 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://cnshark.top/2021/08/19/%E5%86%85%E7%BD%91%E5%AE%89%E5%85%A8-Windows%E5%9F%9F%E6%B8%97%E9%80%8F-Kerberos%E5%A7%94%E6%B4%BE%EF%BC%88%E5%9B%9B%EF%BC%89/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/avatar.jpg">
+      <meta itemprop="name" content="dayu">
+      <meta itemprop="description" content="北冥有魚 其名為鯤<br>化而為鳥 其名為鵬">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="dayu's blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/08/19/%E5%86%85%E7%BD%91%E5%AE%89%E5%85%A8-Windows%E5%9F%9F%E6%B8%97%E9%80%8F-Kerberos%E5%A7%94%E6%B4%BE%EF%BC%88%E5%9B%9B%EF%BC%89/" class="post-title-link" itemprop="url">内网安全-Windows域渗透-Kerberos委派（四）</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2021-08-19 23:02:15 / 修改时间：23:50:43" itemprop="dateCreated datePublished" datetime="2021-08-19T23:02:15+08:00">2021-08-19</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h3 id="在第一章，我的一句话同时也是第一个问题。"><a href="#在第一章，我的一句话同时也是第一个问题。" class="headerlink" title="在第一章，我的一句话同时也是第一个问题。"></a>在第一章，我的一句话同时也是第一个问题。</h3><p><img src="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/202108192304174.png"></p>
+<p>何为Kerberos与委派？为什么Windows域会需要Kerberos与委派？</p>
+<p>何为Kerberos与委派以及为什么Windows域会需要Kerberos，我一到三章已经写清楚了。</p>
+<p>现在我要来回答我曾经所问的另外一个问题</p>
+<p><strong>为什么Windows域会需要委派？</strong></p>
+<p>首先是现有需求，再有功能。委派即是Windows域的功能。</p>
+<p><strong>委派在Windows域内的功能即是，用用户的身份去访问服务。</strong></p>
+<p>即无限制的转发，B可以用从A处得到的TGT访问任意服务，其中B也可以是任意服务。</p>
+<p>那为什么不直接服务服务，再转发给用户呢？</p>
+<p><strong>因为要充分利用 Windows 系统自身提供的权限控制啊，也许有的用户有权限访问那个服务而有的用户没有权限。</strong></p>
+<p>即Windows域为什么会需要委派。</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2021/08/19/%E5%86%85%E7%BD%91%E5%AE%89%E5%85%A8-Windows%E5%9F%9F%E6%B8%97%E9%80%8F-Kerberos%E5%A7%94%E6%B4%BE%EF%BC%88%E5%9B%9B%EF%BC%89/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://cnshark.top/2021/08/11/%E5%86%85%E7%BD%91%E5%AE%89%E5%85%A8-Windows%E5%9F%9F%E6%B8%97%E9%80%8F-Kerberos%E5%A7%94%E6%B4%BE%EF%BC%88%E4%B8%89%EF%BC%89/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -333,7 +409,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-08-11 17:15:03" itemprop="dateModified" datetime="2021-08-11T17:15:03+08:00">2021-08-11</time>
+                <time title="修改时间：2021-08-19 23:50:00" itemprop="dateModified" datetime="2021-08-19T23:50:00+08:00">2021-08-19</time>
               </span>
 
           
@@ -579,7 +655,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">5</span>
+          <span class="site-state-item-count">6</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
